@@ -34,7 +34,7 @@ function checkStorageSize(): boolean {
   return totalSize < MAX_STORAGE_SIZE;
 }
 
-export const storageService = {
+export const secureStorageService = {
   getUrges(): Urge[] {
     try {
       const urgesJson = localStorage.getItem(STORAGE_KEY);
