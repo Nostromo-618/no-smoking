@@ -2,10 +2,12 @@
 export interface Urge {
   intensity: number;
   timestamp: string;
+  type?: 'resisted' | 'nicotine' | 'recorded'; // New field for urge type
 }
 
 const STORAGE_KEY = 'smokingUrges';
 const THEME_STORAGE_KEY = 'themePreference';
+const URGE_TYPE_STORAGE_KEY = 'urgeTypePreference';
 const MAX_STORAGE_SIZE = 5 * 1024 * 1024; // 5MB limit
 
 // Sanitize string to prevent XSS
@@ -48,7 +50,7 @@ export const storageService = {
         return [];
       }
       
-      // Filter out invalid entries
+      // Filter out invalid entries and add default type for backward compatibility
       return urges.filter(urge => 
         urge &&
         typeof urge.intensity === 'number' &&
@@ -56,7 +58,10 @@ export const storageService = {
         urge.intensity <= 10 &&
         typeof urge.timestamp === 'string' &&
         isValidTimestamp(urge.timestamp)
-      );
+      ).map(urge => ({
+        ...urge,
+        type: urge.type || 'resisted' // Default to 'resisted' for backward compatibility
+      }));
     } catch (error) {
       console.error('Error reading from localStorage:', error);
       return [];
@@ -90,7 +95,8 @@ export const storageService = {
       
       urges.push({
         intensity: Math.floor(urge.intensity), // Ensure integer
-        timestamp: sanitizeString(urge.timestamp)
+        timestamp: sanitizeString(urge.timestamp),
+        type: urge.type || 'resisted' // Include type with default
       });
       
       localStorage.setItem(STORAGE_KEY, JSON.stringify(urges));
@@ -173,7 +179,8 @@ export const storageService = {
                 isValidTimestamp(urge.timestamp)) {
               validUrges.push({
                 intensity: Math.floor(urge.intensity),
-                timestamp: sanitizeString(urge.timestamp)
+                timestamp: sanitizeString(urge.timestamp),
+                type: urge.type || 'resisted' // Include type with default
               });
             }
           }
@@ -243,6 +250,34 @@ export const storageService = {
       return true;
     } catch (error) {
       console.error('Error saving theme preference:', error);
+      return false;
+    }
+  },
+
+  getUrgeTypePreference(): string | null {
+    try {
+      const urgeType = localStorage.getItem(URGE_TYPE_STORAGE_KEY);
+      // Validate urge type value
+      if (urgeType && ['resisted', 'nicotine', 'recorded'].includes(urgeType)) {
+        return urgeType;
+      }
+      return 'resisted'; // Default value
+    } catch (error) {
+      console.error('Error reading urge type preference:', error);
+      return 'resisted';
+    }
+  },
+
+  saveUrgeTypePreference(urgeType: string): boolean {
+    try {
+      // Validate urge type value
+      if (!['resisted', 'nicotine', 'recorded'].includes(urgeType)) {
+        throw new Error('Invalid urge type value');
+      }
+      localStorage.setItem(URGE_TYPE_STORAGE_KEY, urgeType);
+      return true;
+    } catch (error) {
+      console.error('Error saving urge type preference:', error);
       return false;
     }
   },
