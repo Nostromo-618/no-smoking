@@ -6,6 +6,108 @@
     </v-card-title>
 
     <v-card-text class="pa-6">
+      <!-- Date Range Selector -->
+      <v-row class="mb-4" align="center">
+        <v-col cols="12" md="6">
+          <div class="d-flex align-center">
+            <v-icon class="mr-2" color="primary">mdi-calendar-range</v-icon>
+            <span class="text-body-1 mr-3">{{ currentDateDisplay }}</span>
+            <v-menu
+              v-model="dateMenu"
+              :close-on-content-click="false"
+              transition="scale-transition"
+              offset-y
+              min-width="auto"
+            >
+              <template v-slot:activator="{ props }">
+                <v-btn
+                  v-bind="props"
+                  variant="outlined"
+                  size="small"
+                  prepend-icon="mdi-calendar"
+                >
+                  {{ dateRangeDisplay }}
+                </v-btn>
+              </template>
+              <v-card>
+                <v-card-text>
+                  <v-row>
+                    <v-col cols="12">
+                      <v-btn-toggle
+                        v-model="dateRangeType"
+                        mandatory
+                        color="primary"
+                        density="compact"
+                        class="mb-3"
+                      >
+                        <v-btn value="all" size="small">All Time</v-btn>
+                        <v-btn value="week" size="small">Last Week</v-btn>
+                        <v-btn value="month" size="small">Last Month</v-btn>
+                        <v-btn value="custom" size="small">Custom</v-btn>
+                      </v-btn-toggle>
+                    </v-col>
+                  </v-row>
+                  <v-row v-if="dateRangeType === 'custom'">
+                    <v-col cols="12" md="6">
+                      <v-text-field
+                        v-model="startDate"
+                        label="Start Date"
+                        type="date"
+                        density="compact"
+                        variant="outlined"
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="12" md="6">
+                      <v-text-field
+                        v-model="endDate"
+                        label="End Date"
+                        type="date"
+                        density="compact"
+                        variant="outlined"
+                      ></v-text-field>
+                    </v-col>
+                  </v-row>
+                  <v-row>
+                    <v-col cols="12" class="text-right">
+                      <v-btn
+                        variant="text"
+                        @click="dateMenu = false"
+                      >
+                        Cancel
+                      </v-btn>
+                      <v-btn
+                        color="primary"
+                        variant="flat"
+                        @click="applyDateFilter"
+                      >
+                        Apply
+                      </v-btn>
+                    </v-col>
+                  </v-row>
+                </v-card-text>
+              </v-card>
+            </v-menu>
+          </div>
+        </v-col>
+        <v-col cols="12" md="6" class="text-md-right">
+          <v-chip
+            v-if="filteredUrges.length !== urges.length"
+            color="info"
+            variant="outlined"
+            size="small"
+          >
+            Showing {{ filteredUrges.length }} of {{ urges.length }} data points
+          </v-chip>
+          <v-chip
+            v-else-if="urges.length > 0"
+            color="success"
+            variant="outlined"
+            size="small"
+          >
+            Showing all {{ urges.length }} data points
+          </v-chip>
+        </v-col>
+      </v-row>
       <div v-if="hasData" class="chart-container" style="height: 400px">
         <Line :data="chartData" :options="chartOptions" />
       </div>
@@ -102,6 +204,48 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 const theme = useTheme()
 const chartData = ref({ labels: [] as string[], datasets: [] as any[] })
 const urges = ref<Urge[]>([])
+const filteredUrges = ref<Urge[]>([])
+
+// Date range state
+const dateMenu = ref(false)
+const dateRangeType = ref<'all' | 'week' | 'month' | 'custom'>('all')
+const startDate = ref('')
+const endDate = ref('')
+
+// Maximum data points to display for performance
+const MAX_DATA_POINTS = 100
+
+// Current date display
+const currentDateDisplay = computed(() => {
+  const now = new Date()
+  return now.toLocaleDateString('en-US', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  })
+})
+
+// Date range display text
+const dateRangeDisplay = computed(() => {
+  switch (dateRangeType.value) {
+    case 'all':
+      return 'All Time'
+    case 'week':
+      return 'Last 7 Days'
+    case 'month':
+      return 'Last 30 Days'
+    case 'custom':
+      if (startDate.value && endDate.value) {
+        const start = new Date(startDate.value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+        const end = new Date(endDate.value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+        return `${start} - ${end}`
+      }
+      return 'Select Dates'
+    default:
+      return 'All Time'
+  }
+})
 
 const chartOptions = computed(() => {
   const isDark = theme.global.current.value.dark
@@ -167,17 +311,18 @@ const chartOptions = computed(() => {
   }
 })
 
-const hasData = computed(() => urges.value.length > 0)
-const totalUrges = computed(() => urges.value.length)
+const hasData = computed(() => filteredUrges.value.length > 0)
+const totalUrges = computed(() => filteredUrges.value.length)
 const averageIntensity = computed(() => {
-  if (urges.value.length === 0) return '0'
-  const avg = urges.value.reduce((sum, urge) => sum + urge.intensity, 0) / urges.value.length
+  if (filteredUrges.value.length === 0) return '0'
+  const avg = filteredUrges.value.reduce((sum, urge) => sum + urge.intensity, 0) / filteredUrges.value.length
   return avg.toFixed(1)
 })
-const resistedCount = computed(() => urges.value.filter(u => !u.type || u.type === 'resisted').length)
-const nicotineCount = computed(() => urges.value.filter(u => u.type === 'nicotine').length)
-const recordedCount = computed(() => urges.value.filter(u => u.type === 'recorded').length)
+const resistedCount = computed(() => filteredUrges.value.filter(u => !u.type || u.type === 'resisted').length)
+const nicotineCount = computed(() => filteredUrges.value.filter(u => u.type === 'nicotine').length)
+const recordedCount = computed(() => filteredUrges.value.filter(u => u.type === 'recorded').length)
 const lastUrgeTime = computed(() => {
+  // Always use all urges for last urge time, not filtered
   if (urges.value.length === 0) return 'Never'
   const lastUrge = urges.value[urges.value.length - 1]
   const date = new Date(lastUrge.timestamp)
@@ -195,10 +340,65 @@ const lastUrgeTime = computed(() => {
   }
 })
 
-const loadChartData = () => {
-  urges.value = storageService.getUrges()
-  const isDark = theme.global.current.value.dark
+// Apply date filter to urges
+const applyDateFilter = () => {
+  let filtered = [...urges.value]
+  const now = new Date()
+  
+  switch (dateRangeType.value) {
+    case 'week': {
+      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+      filtered = urges.value.filter(u => new Date(u.timestamp) >= weekAgo)
+      break
+    }
+    case 'month': {
+      const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+      filtered = urges.value.filter(u => new Date(u.timestamp) >= monthAgo)
+      break
+    }
+    case 'custom': {
+      if (startDate.value && endDate.value) {
+        const start = new Date(startDate.value)
+        start.setHours(0, 0, 0, 0)
+        const end = new Date(endDate.value)
+        end.setHours(23, 59, 59, 999)
+        filtered = urges.value.filter(u => {
+          const urgeDate = new Date(u.timestamp)
+          return urgeDate >= start && urgeDate <= end
+        })
+      }
+      break
+    }
+    case 'all':
+    default:
+      filtered = [...urges.value]
+      break
+  }
+  
+  // Limit data points for performance
+  if (filtered.length > MAX_DATA_POINTS) {
+    // Sample the data to keep it under MAX_DATA_POINTS
+    const step = Math.ceil(filtered.length / MAX_DATA_POINTS)
+    const sampled = []
+    for (let i = 0; i < filtered.length; i += step) {
+      sampled.push(filtered[i])
+    }
+    // Always include the last data point
+    if (sampled[sampled.length - 1] !== filtered[filtered.length - 1]) {
+      sampled.push(filtered[filtered.length - 1])
+    }
+    filtered = sampled
+  }
+  
+  filteredUrges.value = filtered
+  updateChartData()
+  dateMenu.value = false
+}
 
+// Update chart with filtered data
+const updateChartData = () => {
+  const isDark = theme.global.current.value.dark
+  
   // Function to get point color based on urge type
   const getPointColor = (urgeType: string | undefined) => {
     switch (urgeType) {
@@ -212,15 +412,9 @@ const loadChartData = () => {
         return isDark ? '#4ade80' : '#22c55e' // Default to green for backward compatibility
     }
   }
-
-  // Create separate datasets for each urge type to show in legend
-  const resistedUrges = urges.value.filter(u => !u.type || u.type === 'resisted')
-  const nicotineUrges = urges.value.filter(u => u.type === 'nicotine')
-  const recordedUrges = urges.value.filter(u => u.type === 'recorded')
-
-  // Create a combined dataset with individual point colors
+  
   chartData.value = {
-    labels: urges.value.map((urge) => {
+    labels: filteredUrges.value.map((urge) => {
       const date = new Date(urge.timestamp)
       return (
         date.toLocaleDateString() +
@@ -233,9 +427,9 @@ const loadChartData = () => {
         label: 'Urge Intensity',
         borderColor: isDark ? '#60a5fa' : '#1976D2',
         backgroundColor: isDark ? 'rgba(96, 165, 250, 0.2)' : 'rgba(25, 118, 210, 0.1)',
-        data: urges.value.map((urge) => urge.intensity),
+        data: filteredUrges.value.map((urge) => urge.intensity),
         fill: true,
-        pointBackgroundColor: urges.value.map((urge) => getPointColor(urge.type)),
+        pointBackgroundColor: filteredUrges.value.map((urge) => getPointColor(urge.type)),
         pointBorderColor: isDark ? '#1e293b' : '#fff',
         pointBorderWidth: 2,
         pointRadius: 6,
@@ -245,11 +439,32 @@ const loadChartData = () => {
   }
 }
 
-// Watch for theme changes and reload chart data
+const loadChartData = () => {
+  urges.value = storageService.getUrges()
+  // Initialize filtered urges with all urges
+  filteredUrges.value = [...urges.value]
+  // Apply current filter
+  applyDateFilter()
+}
+
+// Watch for theme changes and update chart
 watch(
   () => theme.global.current.value.dark,
   () => {
-    loadChartData()
+    updateChartData()
+  },
+)
+
+// Initialize date range to current date for custom range
+watch(
+  () => dateRangeType.value,
+  (newType) => {
+    if (newType === 'custom' && !startDate.value && !endDate.value) {
+      const now = new Date()
+      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+      startDate.value = weekAgo.toISOString().split('T')[0]
+      endDate.value = now.toISOString().split('T')[0]
+    }
   },
 )
 
