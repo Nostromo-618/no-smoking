@@ -465,10 +465,17 @@ watch(
       startDate.value = weekAgo.toISOString().split('T')[0]
       endDate.value = now.toISOString().split('T')[0]
     }
+    // Save calendar interval preference
+    storageService.saveCalendarIntervalPreference(newType)
   },
 )
 
 onMounted(() => {
+  // Load saved calendar interval preference
+  const savedInterval = storageService.getCalendarIntervalPreference()
+  if (savedInterval) {
+    dateRangeType.value = savedInterval as 'all' | 'week' | 'month' | 'custom'
+  }
   loadChartData()
 })
 

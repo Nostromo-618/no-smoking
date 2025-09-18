@@ -8,6 +8,7 @@ export interface Urge {
 const STORAGE_KEY = 'smokingUrges';
 const THEME_STORAGE_KEY = 'themePreference';
 const URGE_TYPE_STORAGE_KEY = 'urgeTypePreference';
+const CALENDAR_INTERVAL_STORAGE_KEY = 'calendarIntervalPreference';
 const MAX_STORAGE_SIZE = 5 * 1024 * 1024; // 5MB limit
 
 // Sanitize string to prevent XSS
@@ -278,6 +279,34 @@ export const storageService = {
       return true;
     } catch (error) {
       console.error('Error saving urge type preference:', error);
+      return false;
+    }
+  },
+
+  getCalendarIntervalPreference(): string | null {
+    try {
+      const interval = localStorage.getItem(CALENDAR_INTERVAL_STORAGE_KEY);
+      // Validate interval value
+      if (interval && ['all', 'week', 'month', 'custom'].includes(interval)) {
+        return interval;
+      }
+      return 'all'; // Default value
+    } catch (error) {
+      console.error('Error reading calendar interval preference:', error);
+      return 'all';
+    }
+  },
+
+  saveCalendarIntervalPreference(interval: string): boolean {
+    try {
+      // Validate interval value
+      if (!['all', 'week', 'month', 'custom'].includes(interval)) {
+        throw new Error('Invalid calendar interval value');
+      }
+      localStorage.setItem(CALENDAR_INTERVAL_STORAGE_KEY, interval);
+      return true;
+    } catch (error) {
+      console.error('Error saving calendar interval preference:', error);
       return false;
     }
   },

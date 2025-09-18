@@ -45,37 +45,52 @@
         {{ getSuccessMessage() }}
       </v-alert>
 
-      <!-- Urge Type Toggle - Moved inside card-text -->
+      <!-- Urge Type Radio Buttons -->
       <div class="mb-4">
-        <div class="text-caption text-medium-emphasis mb-2 text-center">Select urge outcome:</div>
-        <v-btn-toggle
+        <div class="text-caption text-medium-emphasis mb-3 text-center">Select urge outcome:</div>
+        <v-radio-group
           v-model="urgeType"
-          mandatory
-          color="primary"
-          variant="outlined"
-          divided
-          density="comfortable"
-          class="d-flex w-100"
+          inline
+          hide-details
+          class="d-flex justify-space-between"
         >
-          <v-btn value="resisted" class="flex-grow-1">
-            <div class="d-flex flex-column align-center">
-              <v-icon color="success" size="small">mdi-check-circle</v-icon>
-              <span class="text-caption mt-1">Urge Resisted</span>
-            </div>
-          </v-btn>
-          <v-btn value="nicotine" class="flex-grow-1">
-            <div class="d-flex flex-column align-center">
-              <v-icon color="error" size="small">mdi-smoking</v-icon>
-              <span class="text-caption mt-1">Nicotine Happened</span>
-            </div>
-          </v-btn>
-          <v-btn value="recorded" class="flex-grow-1">
-            <div class="d-flex flex-column align-center">
-              <v-icon color="grey" size="small">mdi-pencil</v-icon>
-              <span class="text-caption mt-1">Just Record</span>
-            </div>
-          </v-btn>
-        </v-btn-toggle>
+          <v-radio
+            value="resisted"
+            color="success"
+            class="flex-grow-1"
+          >
+            <template v-slot:label>
+              <div class="d-flex align-center">
+                <v-icon color="success" size="small" class="mr-2">mdi-check-circle</v-icon>
+                <span class="text-body-2">Urge Resisted</span>
+              </div>
+            </template>
+          </v-radio>
+          <v-radio
+            value="nicotine"
+            color="error"
+            class="flex-grow-1"
+          >
+            <template v-slot:label>
+              <div class="d-flex align-center">
+                <v-icon color="error" size="small" class="mr-2">mdi-smoking</v-icon>
+                <span class="text-body-2">Nicotine Happened</span>
+              </div>
+            </template>
+          </v-radio>
+          <v-radio
+            value="recorded"
+            color="grey"
+            class="flex-grow-1"
+          >
+            <template v-slot:label>
+              <div class="d-flex align-center">
+                <v-icon color="grey" size="small" class="mr-2">mdi-pencil</v-icon>
+                <span class="text-body-2">Just Record</span>
+              </div>
+            </template>
+          </v-radio>
+        </v-radio-group>
       </div>
     </v-card-text>
 
