@@ -208,6 +208,7 @@ const filteredUrges = ref<Urge[]>([])
 
 // Date range state
 const dateMenu = ref(false)
+// Initialize with 'all' but will be overridden from storage in onMounted
 const dateRangeType = ref<'all' | 'week' | 'month' | 'custom'>('all')
 const startDate = ref('')
 const endDate = ref('')
@@ -439,12 +440,14 @@ const updateChartData = () => {
   }
 }
 
-const loadChartData = () => {
+const loadChartData = (skipFilter = false) => {
   urges.value = storageService.getUrges()
   // Initialize filtered urges with all urges
   filteredUrges.value = [...urges.value]
-  // Apply current filter
-  applyDateFilter()
+  // Apply current filter unless explicitly skipped
+  if (!skipFilter) {
+    applyDateFilter()
+  }
 }
 
 // Watch for theme changes and update chart
@@ -454,6 +457,9 @@ watch(
     updateChartData()
   },
 )
+
+// Track if component is mounted to avoid saving on initial load
+const isMounted = ref(false)
 
 // Initialize date range to current date for custom range
 watch(
@@ -465,18 +471,30 @@ watch(
       startDate.value = weekAgo.toISOString().split('T')[0]
       endDate.value = now.toISOString().split('T')[0]
     }
-    // Save calendar interval preference
-    storageService.saveCalendarIntervalPreference(newType)
+    // Only save preference after component is mounted (user interaction)
+    if (isMounted.value) {
+      storageService.saveCalendarIntervalPreference(newType)
+    }
   },
 )
 
 onMounted(() => {
+  // First, load the urges data without applying filter
+  urges.value = storageService.getUrges()
+  
   // Load saved calendar interval preference
   const savedInterval = storageService.getCalendarIntervalPreference()
-  if (savedInterval) {
+  
+  // Set the date range type from storage (or use default)
+  if (savedInterval && ['all', 'week', 'month', 'custom'].includes(savedInterval)) {
     dateRangeType.value = savedInterval as 'all' | 'week' | 'month' | 'custom'
   }
-  loadChartData()
+  
+  // Now apply the filter with the correct dateRangeType
+  applyDateFilter()
+  
+  // Mark component as mounted after initial load
+  isMounted.value = true
 })
 
 defineExpose({ loadChartData })

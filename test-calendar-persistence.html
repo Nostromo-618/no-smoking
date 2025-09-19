@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Calendar Interval Persistence</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <h1>Calendar Interval Persistence Test</h1>
+    
+    <div class="test-section">
+        <h2>Current Status</h2>
+        <div id="current-status" class="status info">Loading...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test Actions</h2>
+        <button onclick="testSave('all')">Save 'all'</button>
+        <button onclick="testSave('week')">Save 'week'</button>
+        <button onclick="testSave('month')">Save 'month'</button>
+        <button onclick="testSave('custom')">Save 'custom'</button>
+        <button onclick="testLoad()">Load Saved Value</button>
+        <button onclick="clearStorage()">Clear Storage</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test Results</h2>
+        <div id="test-results"></div>
+    </div>
+
+    <script>
+        const CALENDAR_INTERVAL_STORAGE_KEY = 'calendarIntervalPreference';
+        
+        function updateStatus() {
+            const saved = localStorage.getItem(CALENDAR_INTERVAL_STORAGE_KEY);
+            const statusEl = document.getElementById('current-status');
+            if (saved) {
+                statusEl.className = 'status success';
+                statusEl.textContent = `Current saved value: "${saved}"`;
+            } else {
+                statusEl.className = 'status info';
+                statusEl.textContent = 'No saved value in localStorage';
+            }
+        }
+        
+        function addResult(message, type = 'info') {
+            const resultsEl = document.getElementById('test-results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `status ${type}`;
+            resultDiv.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            resultsEl.insertBefore(resultDiv, resultsEl.firstChild);
+        }
+        
+        function testSave(value) {
+            try {
+                localStorage.setItem(CALENDAR_INTERVAL_STORAGE_KEY, value);
+                addResult(`Successfully saved "${value}" to localStorage`, 'success');
+                updateStatus();
+            } catch (error) {
+                addResult(`Error saving "${value}": ${error.message}`, 'error');
+            }
+        }
+        
+        function testLoad() {
+            try {
+                const value = localStorage.getItem(CALENDAR_INTERVAL_STORAGE_KEY);
+                if (value) {
+                    addResult(`Loaded value: "${value}"`, 'success');
+                } else {
+                    addResult('No value found in localStorage', 'info');
+                }
+            } catch (error) {
+                addResult(`Error loading: ${error.message}`, 'error');
+            }
+        }
+        
+        function clearStorage() {
+            try {
+                localStorage.removeItem(CALENDAR_INTERVAL_STORAGE_KEY);
+                addResult('Cleared localStorage', 'info');
+                updateStatus();
+            } catch (error) {
+                addResult(`Error clearing: ${error.message}`, 'error');
+            }
+        }
+        
+        // Initial status update
+        updateStatus();
+        
+        // Test sequence
+        setTimeout(() => {
+            addResult('Starting automated test sequence...', 'info');
+            
+            // Test 1: Clear and verify empty
+            clearStorage();
+            const empty = localStorage.getItem(CALENDAR_INTERVAL_STORAGE_KEY);
+            if (empty === null) {
+                addResult('✓ Test 1 passed: Storage is empty after clear', 'success');
+            } else {
+                addResult('✗ Test 1 failed: Storage not empty after clear', 'error');
+            }
+            
+            // Test 2: Save and verify
+            testSave('week');
+            const saved = localStorage.getItem(CALENDAR_INTERVAL_STORAGE_KEY);
+            if (saved === 'week') {
+                addResult('✓ Test 2 passed: Value saved and retrieved correctly', 'success');
+            } else {
+                addResult(`✗ Test 2 failed: Expected "week", got "${saved}"`, 'error');
+            }
+            
+            // Test 3: Overwrite and verify
+            testSave('month');
+            const overwritten = localStorage.getItem(CALENDAR_INTERVAL_STORAGE_KEY);
+            if (overwritten === 'month') {
+                addResult('✓ Test 3 passed: Value overwritten correctly', 'success');
+            } else {
+                addResult(`✗ Test 3 failed: Expected "month", got "${overwritten}"`, 'error');
+            }
+            
+            addResult('Automated test sequence complete!', 'info');
+        }, 1000);
+    </script>
+</body>
+</html>
