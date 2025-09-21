@@ -208,8 +208,10 @@ const filteredUrges = ref<Urge[]>([])
 
 // Date range state
 const dateMenu = ref(false)
-// Initialize with 'all' but will be overridden from storage in onMounted
-const dateRangeType = ref<'all' | 'week' | 'month' | 'custom'>('all')
+// Initialize from storage immediately
+const dateRangeType = ref<'all' | 'week' | 'month' | 'custom'>(
+  (storageService.getCalendarIntervalPreference() as 'all' | 'week' | 'month' | 'custom') || 'all'
+)
 const startDate = ref('')
 const endDate = ref('')
 
@@ -463,8 +465,9 @@ const isMounted = ref(false)
 
 // Initialize date range to current date for custom range
 watch(
-  () => dateRangeType.value,
+  dateRangeType,
   (newType) => {
+    console.log('dateRangeType changed to:', newType, 'isMounted:', isMounted.value)
     if (newType === 'custom' && !startDate.value && !endDate.value) {
       const now = new Date()
       const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
@@ -473,24 +476,19 @@ watch(
     }
     // Only save preference after component is mounted (user interaction)
     if (isMounted.value) {
+      console.log('Saving calendar interval preference:', newType)
       storageService.saveCalendarIntervalPreference(newType)
     }
   },
 )
 
 onMounted(() => {
-  // First, load the urges data without applying filter
+  console.log('Component mounted, dateRangeType is:', dateRangeType.value)
+  
+  // Load the urges data
   urges.value = storageService.getUrges()
   
-  // Load saved calendar interval preference
-  const savedInterval = storageService.getCalendarIntervalPreference()
-  
-  // Set the date range type from storage (or use default)
-  if (savedInterval && ['all', 'week', 'month', 'custom'].includes(savedInterval)) {
-    dateRangeType.value = savedInterval as 'all' | 'week' | 'month' | 'custom'
-  }
-  
-  // Now apply the filter with the correct dateRangeType
+  // Apply the filter with the dateRangeType that was already set from storage
   applyDateFilter()
   
   // Mark component as mounted after initial load
