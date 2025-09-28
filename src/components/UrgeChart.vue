@@ -184,7 +184,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed, watch, nextTick } from 'vue'
 import { Line } from 'vue-chartjs'
 import { useTheme } from 'vuetify'
 import {
@@ -208,10 +208,8 @@ const filteredUrges = ref<Urge[]>([])
 
 // Date range state
 const dateMenu = ref(false)
-// Initialize from storage immediately
-const dateRangeType = ref<'all' | 'week' | 'month' | 'custom'>(
-  (storageService.getCalendarIntervalPreference() as 'all' | 'week' | 'month' | 'custom') || 'all'
-)
+// Initialize as undefined to avoid conflicts with loaded preference
+const dateRangeType = ref<'all' | 'week' | 'month' | 'custom'>()
 const startDate = ref('')
 const endDate = ref('')
 
@@ -462,12 +460,16 @@ watch(
 
 // Track if component is mounted to avoid saving on initial load
 const isMounted = ref(false)
+const isInitializing = ref(true)
 
 // Initialize date range to current date for custom range
 watch(
   dateRangeType,
-  (newType) => {
-    console.log('dateRangeType changed to:', newType, 'isMounted:', isMounted.value)
+  (newType, oldType) => {
+    console.log('=== WATCHER TRIGGERED ===')
+    console.log('dateRangeType changed from:', oldType, 'to:', newType)
+    console.log('isMounted:', isMounted.value)
+
     if (newType === 'custom' && !startDate.value && !endDate.value) {
       const now = new Date()
       const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
@@ -475,24 +477,52 @@ watch(
       endDate.value = now.toISOString().split('T')[0]
     }
     // Only save preference after component is mounted (user interaction)
-    if (isMounted.value) {
+    // Skip saving if oldType is undefined (initial setup) or during initialization
+    if (isMounted.value && oldType !== undefined && !isInitializing.value) {
       console.log('Saving calendar interval preference:', newType)
-      storageService.saveCalendarIntervalPreference(newType)
+      const saved = storageService.saveCalendarIntervalPreference(newType)
+      console.log('Save result:', saved)
+    } else {
+      console.log('Skipping save - isMounted:', isMounted.value, 'oldType:', oldType, 'isInitializing:', isInitializing.value)
     }
   },
 )
 
 onMounted(() => {
-  console.log('Component mounted, dateRangeType is:', dateRangeType.value)
-  
+  console.log('Component mounted')
+  console.log('Current dateRangeType value before loading from storage:', dateRangeType.value)
+
+  // Load saved calendar interval preference
+  const savedInterval = storageService.getCalendarIntervalPreference()
+  console.log('Storage value from localStorage:', localStorage.getItem('calendarIntervalPreference'))
+  console.log('Saved interval from service:', savedInterval)
+
+  // Set the date range type from storage (or use default)
+  if (savedInterval && ['all', 'week', 'month', 'custom'].includes(savedInterval)) {
+    console.log('Setting dateRangeType to:', savedInterval)
+    dateRangeType.value = savedInterval as 'all' | 'week' | 'month' | 'custom'
+  } else {
+    console.log('Using default value: all')
+    dateRangeType.value = 'all'
+  }
+
+  console.log('Final dateRangeType value:', dateRangeType.value)
+
   // Load the urges data
   urges.value = storageService.getUrges()
-  
-  // Apply the filter with the dateRangeType that was already set from storage
+
+  // Apply the filter with the dateRangeType that was set from storage
   applyDateFilter()
-  
-  // Mark component as mounted after initial load
-  isMounted.value = true
+
+  // Mark component as mounted after initial load - use nextTick to ensure reactivity is complete
+  nextTick(() => {
+    isMounted.value = true
+    // Clear the initializing flag after a short delay to ensure all reactivity is complete
+    setTimeout(() => {
+      isInitializing.value = false
+      console.log('Component fully mounted and ready for user interactions')
+    }, 100)
+  })
 })
 
 defineExpose({ loadChartData })

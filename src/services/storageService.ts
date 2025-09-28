@@ -286,10 +286,14 @@ export const storageService = {
   getCalendarIntervalPreference(): string | null {
     try {
       const interval = localStorage.getItem(CALENDAR_INTERVAL_STORAGE_KEY);
+      console.log('getCalendarIntervalPreference - Raw localStorage value:', interval);
+      console.log('getCalendarIntervalPreference - Storage key used:', CALENDAR_INTERVAL_STORAGE_KEY);
       // Validate interval value
       if (interval && ['all', 'week', 'month', 'custom'].includes(interval)) {
+        console.log('getCalendarIntervalPreference - Valid interval found:', interval);
         return interval;
       }
+      console.log('getCalendarIntervalPreference - Using default: all');
       return 'all'; // Default value
     } catch (error) {
       console.error('Error reading calendar interval preference:', error);
@@ -299,11 +303,19 @@ export const storageService = {
 
   saveCalendarIntervalPreference(interval: string): boolean {
     try {
+      console.log('saveCalendarIntervalPreference - Saving interval:', interval);
+      console.log('saveCalendarIntervalPreference - Storage key used:', CALENDAR_INTERVAL_STORAGE_KEY);
       // Validate interval value
       if (!['all', 'week', 'month', 'custom'].includes(interval)) {
         throw new Error('Invalid calendar interval value');
       }
       localStorage.setItem(CALENDAR_INTERVAL_STORAGE_KEY, interval);
+      console.log('saveCalendarIntervalPreference - Successfully saved:', interval);
+      
+      // Verify the save worked
+      const verify = localStorage.getItem(CALENDAR_INTERVAL_STORAGE_KEY);
+      console.log('saveCalendarIntervalPreference - Verification read:', verify);
+      
       return true;
     } catch (error) {
       console.error('Error saving calendar interval preference:', error);

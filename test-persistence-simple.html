@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Persistence Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .status { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <h1>Calendar Persistence Test</h1>
+    
+    <div class="status info" id="status">Testing persistence...</div>
+    
+    <script>
+        const STORAGE_KEY = 'calendarIntervalPreference';
+        
+        function testPersistence() {
+            const status = document.getElementById('status');
+            
+            try {
+                // Clear any existing value
+                localStorage.removeItem(STORAGE_KEY);
+                
+                // Test saving different values
+                const testValues = ['all', 'week', 'month', 'custom'];
+                let allPassed = true;
+                
+                testValues.forEach(value => {
+                    localStorage.setItem(STORAGE_KEY, value);
+                    const retrieved = localStorage.getItem(STORAGE_KEY);
+                    
+                    if (retrieved !== value) {
+                        allPassed = false;
+                        status.innerHTML += `<br>❌ Failed for ${value}: got ${retrieved}`;
+                    } else {
+                        status.innerHTML += `<br>✅ ${value}: OK`;
+                    }
+                });
+                
+                // Final test
+                localStorage.setItem(STORAGE_KEY, 'month');
+                const finalValue = localStorage.getItem(STORAGE_KEY);
+                
+                if (allPassed && finalValue === 'month') {
+                    status.className = 'status success';
+                    status.innerHTML = '✅ All persistence tests passed!<br>' +
+                        'Final value: ' + finalValue + '<br>' +
+                        'Local storage is working correctly.';
+                } else {
+                    status.className = 'status error';
+                    status.innerHTML = '❌ Some tests failed!<br>' +
+                        'Final value: ' + finalValue;
+                }
+                
+            } catch (error) {
+                status.className = 'status error';
+                status.innerHTML = '❌ Error: ' + error.message;
+            }
+        }
+        
+        // Run test
+        testPersistence();
+    </script>
+</body>
+</html>

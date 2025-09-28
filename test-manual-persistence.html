@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual Calendar Persistence Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        .test-results {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Manual Calendar Persistence Test</h1>
+    
+    <div class="test-section">
+        <h2>Step 1: Test Local Storage Directly</h2>
+        <button onclick="testLocalStorage()">Test Local Storage</button>
+        <button onclick="clearLocalStorage()">Clear Local Storage</button>
+        <div id="localStorageStatus" class="status info">Ready to test</div>
+    </div>
+
+    <div class="test-section">
+        <h2>Step 2: Test Main Application</h2>
+        <p>Open the main application in a new tab and follow these steps:</p>
+        <ol>
+            <li>Open the main app: <a href="http://localhost:5173" target="_blank">http://localhost:5173</a></li>
+            <li>Change the calendar interval to "Last Month"</li>
+            <li>Refresh the page</li>
+            <li>Check if "Last Month" is still selected</li>
+        </ol>
+        <button onclick="checkMainAppStorage()">Check Main App Storage</button>
+        <div id="mainAppStatus" class="status info">Ready to test</div>
+    </div>
+
+    <div class="test-section">
+        <h2>Step 3: Automated Test Sequence</h2>
+        <button onclick="runAutomatedTest()">Run Automated Test</button>
+        <div id="automatedTestResults" class="test-results">Test results will appear here</div>
+    </div>
+
+    <div class="test-section">
+        <h2>Current Storage State</h2>
+        <button onclick="refreshStorageDisplay()">Refresh Display</button>
+        <div id="currentStorage" class="status info">Storage state will appear here</div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'calendarIntervalPreference';
+
+        function testLocalStorage() {
+            const status = document.getElementById('localStorageStatus');
+            try {
+                // Test basic functionality
+                localStorage.setItem(STORAGE_KEY, 'month');
+                const saved = localStorage.getItem(STORAGE_KEY);
+                
+                if (saved === 'month') {
+                    status.className = 'status success';
+                    status.textContent = `✓ Local storage working. Saved value: ${saved}`;
+                    return true;
+                } else {
+                    status.className = 'status error';
+                    status.textContent = `✗ Local storage test failed. Expected 'month', got '${saved}'`;
+                    return false;
+                }
+            } catch (error) {
+                status.className = 'status error';
+                status.textContent = `✗ Local storage error: ${error.message}`;
+                return false;
+            }
+        }
+
+        function clearLocalStorage() {
+            const status = document.getElementById('localStorageStatus');
+            try {
+                localStorage.removeItem(STORAGE_KEY);
+                status.className = 'status success';
+                status.textContent = '✓ Local storage cleared';
+                refreshStorageDisplay();
+            } catch (error) {
+                status.className = 'status error';
+                status.textContent = `✗ Error clearing storage: ${error.message}`;
+            }
+        }
+
+        function checkMainAppStorage() {
+            const status = document.getElementById('mainAppStatus');
+            const value = localStorage.getItem(STORAGE_KEY);
+            
+            if (value) {
+                status.className = 'status success';
+                status.textContent = `✓ Main app storage contains: ${value}`;
+            } else {
+                status.className = 'status info';
+                status.textContent = 'ℹ No calendar interval saved in main app yet';
+            }
+        }
+
+        function refreshStorageDisplay() {
+            const display = document.getElementById('currentStorage');
+            const allKeys = Object.keys(localStorage);
+            const relevantKeys = allKeys.filter(key => key.includes('calendar') || key.includes('interval'));
+            
+            let content = '<strong>Storage Keys:</strong><br>';
+            if (relevantKeys.length > 0) {
+                relevantKeys.forEach(key => {
+                    content += `${key}: ${localStorage.getItem(key)}<br>`;
+                });
+            } else {
+                content += 'No calendar-related storage keys found<br>';
+            }
+            
+            content += '<br><strong>All localStorage keys:</strong><br>';
+            allKeys.forEach(key => {
+                content += `${key}: ${localStorage.getItem(key)}<br>`;
+            });
+            
+            display.innerHTML = content;
+        }
+
+        function runAutomatedTest() {
+            const results = document.getElementById('automatedTestResults');
+            results.innerHTML = 'Running test sequence...<br>';
+            
+            const testResults = [];
+            
+            // Test 1: Clear storage
+            try {
+                localStorage.removeItem(STORAGE_KEY);
+                testResults.push('✓ Storage cleared');
+            } catch (error) {
+                testResults.push(`✗ Failed to clear storage: ${error.message}`);
+            }
+            
+            // Test 2: Save different values
+            const testValues = ['all', 'week', 'month', 'custom'];
+            testValues.forEach(value => {
+                try {
+                    localStorage.setItem(STORAGE_KEY, value);
+                    const saved = localStorage.getItem(STORAGE_KEY);
+                    if (saved === value) {
+                        testResults.push(`✓ Successfully saved and retrieved: ${value}`);
+                    } else {
+                        testResults.push(`✗ Save/retrieve mismatch for ${value}: got ${saved}`);
+                    }
+                } catch (error) {
+                    testResults.push(`✗ Failed to save ${value}: ${error.message}`);
+                }
+            });
+            
+            // Test 3: Verify persistence across operations
+            try {
+                localStorage.setItem(STORAGE_KEY, 'month');
+                const finalValue = localStorage.getItem(STORAGE_KEY);
+                if (finalValue === 'month') {
+                    testResults.push(`✓ Final persistence test passed: ${finalValue}`);
+                } else {
+                    testResults.push(`✗ Final persistence test failed: got ${finalValue}`);
+                }
+            } catch (error) {
+                testResults.push(`✗ Final persistence test error: ${error.message}`);
+            }
+            
+            // Display results
+            results.innerHTML = '<strong>Test Results:</strong><br>' + 
+                testResults.join('<br>') + 
+                '<br><br><strong>Summary:</strong><br>' +
+                `Total tests: ${testResults.length}<br>` +
+                `Passed: ${testResults.filter(r => r.includes('✓')).length}<br>` +
+                `Failed: ${testResults.filter(r => r.includes('✗')).length}`;
+            
+            refreshStorageDisplay();
+        }
+
+        // Initialize display
+        refreshStorageDisplay();
+    </script>
+</body>
+</html>
