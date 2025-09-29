@@ -478,12 +478,12 @@ watch(
     }
     // Only save preference after component is mounted (user interaction)
     // Skip saving if oldType is undefined (initial setup) or during initialization
-    if (isMounted.value && oldType !== undefined && !isInitializing.value) {
-      console.log('Saving calendar interval preference:', newType)
-      const saved = storageService.saveCalendarIntervalPreference(newType)
-      console.log('Save result:', saved)
+    if (isMounted.value && newType && oldType !== newType) {
+      console.log('Watcher triggered: Saving preference', { newType, isMounted: isMounted.value });
+      const saved = storageService.saveCalendarIntervalPreference(newType);
+      console.log('Save result:', saved);
     } else {
-      console.log('Skipping save - isMounted:', isMounted.value, 'oldType:', oldType, 'isInitializing:', isInitializing.value)
+      console.log('Watcher skipped: Component not mounted or type unchanged', { isMounted: isMounted.value, oldType, newType, isInitializing: isInitializing.value });
     }
   },
 )
