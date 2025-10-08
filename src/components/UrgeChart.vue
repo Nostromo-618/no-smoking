@@ -367,6 +367,12 @@ const applyDateFilter = () => {
           const urgeDate = new Date(u.timestamp)
           return urgeDate >= start && urgeDate <= end
         })
+        
+        // Save custom date range when Apply is clicked (if component is mounted)
+        if (isMounted.value && !isInitializing.value) {
+          console.log('Saving custom date range on Apply:', { startDate: startDate.value, endDate: endDate.value })
+          storageService.saveCustomDateRange(startDate.value, endDate.value)
+        }
       }
       break
     }
@@ -482,8 +488,26 @@ watch(
       console.log('Watcher triggered: Saving preference', { newType, isMounted: isMounted.value });
       const saved = storageService.saveCalendarIntervalPreference(newType);
       console.log('Save result:', saved);
+      
+      // If switching away from custom, we don't need to save the dates
+      // If switching to custom, dates will be saved when user clicks Apply
     } else {
       console.log('Watcher skipped: Component not mounted or type unchanged', { isMounted: isMounted.value, oldType, newType, isInitializing: isInitializing.value });
+    }
+  },
+)
+
+// Watch for custom date changes and save them
+watch(
+  [startDate, endDate],
+  ([newStart, newEnd], [oldStart, oldEnd]) => {
+    // Only save if component is mounted, dates are set, and this is a user interaction
+    if (isMounted.value && !isInitializing.value && dateRangeType.value === 'custom') {
+      if (newStart && newEnd && (newStart !== oldStart || newEnd !== oldEnd)) {
+        console.log('Custom dates changed:', { startDate: newStart, endDate: newEnd });
+        const saved = storageService.saveCustomDateRange(newStart, newEnd);
+        console.log('Custom date range save result:', saved);
+      }
     }
   },
 )
@@ -501,6 +525,25 @@ onMounted(() => {
   if (savedInterval && ['all', 'week', 'month', 'custom'].includes(savedInterval)) {
     console.log('Setting dateRangeType to:', savedInterval)
     dateRangeType.value = savedInterval as 'all' | 'week' | 'month' | 'custom'
+    
+    // If the saved interval is 'custom', load the saved custom date range
+    if (savedInterval === 'custom') {
+      const savedDateRange = storageService.getCustomDateRange()
+      console.log('Loading saved custom date range:', savedDateRange)
+      
+      if (savedDateRange) {
+        startDate.value = savedDateRange.startDate
+        endDate.value = savedDateRange.endDate
+        console.log('Custom dates loaded:', { startDate: startDate.value, endDate: endDate.value })
+      } else {
+        // If no saved custom range, initialize with default (last week)
+        console.log('No saved custom range, using default dates')
+        const now = new Date()
+        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+        startDate.value = weekAgo.toISOString().split('T')[0]
+        endDate.value = now.toISOString().split('T')[0]
+      }
+    }
   } else {
     console.log('Using default value: all')
     dateRangeType.value = 'all'

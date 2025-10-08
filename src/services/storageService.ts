@@ -9,6 +9,7 @@ const STORAGE_KEY = 'smokingUrges';
 const THEME_STORAGE_KEY = 'themePreference';
 const URGE_TYPE_STORAGE_KEY = 'urgeTypePreference';
 const CALENDAR_INTERVAL_STORAGE_KEY = 'calendarIntervalPreference';
+const CUSTOM_DATE_RANGE_STORAGE_KEY = 'customDateRange';
 const MAX_STORAGE_SIZE = 5 * 1024 * 1024; // 5MB limit
 
 // Sanitize string to prevent XSS
@@ -319,6 +320,86 @@ export const storageService = {
       return true;
     } catch (error) {
       console.error('Error saving calendar interval preference:', error);
+      return false;
+    }
+  },
+
+  getCustomDateRange(): { startDate: string; endDate: string } | null {
+    try {
+      const dateRange = localStorage.getItem(CUSTOM_DATE_RANGE_STORAGE_KEY);
+      console.log('getCustomDateRange - Raw localStorage value:', dateRange);
+      
+      if (!dateRange) {
+        console.log('getCustomDateRange - No custom date range saved');
+        return null;
+      }
+      
+      // Parse the stored value (format: "2025-10-07_2025-10-08")
+      const parts = dateRange.split('_');
+      if (parts.length !== 2) {
+        console.error('getCustomDateRange - Invalid format:', dateRange);
+        return null;
+      }
+      
+      const [startDate, endDate] = parts;
+      
+      // Validate date format (YYYY-MM-DD)
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
+        console.error('getCustomDateRange - Invalid date format');
+        return null;
+      }
+      
+      // Validate dates are valid
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        console.error('getCustomDateRange - Invalid dates');
+        return null;
+      }
+      
+      console.log('getCustomDateRange - Valid range found:', { startDate, endDate });
+      return { startDate, endDate };
+    } catch (error) {
+      console.error('Error reading custom date range:', error);
+      return null;
+    }
+  },
+
+  saveCustomDateRange(startDate: string, endDate: string): boolean {
+    try {
+      console.log('saveCustomDateRange - Saving range:', { startDate, endDate });
+      
+      // Validate date format (YYYY-MM-DD)
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
+        throw new Error('Invalid date format. Expected YYYY-MM-DD');
+      }
+      
+      // Validate dates are valid
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        throw new Error('Invalid dates');
+      }
+      
+      // Validate start date is before or equal to end date
+      if (start > end) {
+        throw new Error('Start date must be before or equal to end date');
+      }
+      
+      // Store in format: "2025-10-07_2025-10-08"
+      const dateRangeString = `${startDate}_${endDate}`;
+      localStorage.setItem(CUSTOM_DATE_RANGE_STORAGE_KEY, dateRangeString);
+      console.log('saveCustomDateRange - Successfully saved:', dateRangeString);
+      
+      // Verify the save worked
+      const verify = localStorage.getItem(CUSTOM_DATE_RANGE_STORAGE_KEY);
+      console.log('saveCustomDateRange - Verification read:', verify);
+      
+      return true;
+    } catch (error) {
+      console.error('Error saving custom date range:', error);
       return false;
     }
   },
