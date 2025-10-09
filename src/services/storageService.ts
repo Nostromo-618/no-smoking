@@ -156,7 +156,7 @@ export const storageService = {
           let importedUrges: Urge[];
           try {
             importedUrges = JSON.parse(result);
-          } catch (parseError) {
+          } catch {
             throw new Error('Invalid JSON format');
           }
           
@@ -231,8 +231,8 @@ export const storageService = {
   getThemePreference(): string | null {
     try {
       const theme = localStorage.getItem(THEME_STORAGE_KEY);
-      // Validate theme value
-      if (theme && ['light', 'dark'].includes(theme)) {
+      // Validate theme value - now includes 'system'
+      if (theme && ['light', 'dark', 'system'].includes(theme)) {
         return theme;
       }
       return null;
@@ -244,8 +244,8 @@ export const storageService = {
 
   saveThemePreference(theme: string): boolean {
     try {
-      // Validate theme value
-      if (!['light', 'dark'].includes(theme)) {
+      // Validate theme value - now includes 'system'
+      if (!['light', 'dark', 'system'].includes(theme)) {
         throw new Error('Invalid theme value');
       }
       localStorage.setItem(THEME_STORAGE_KEY, theme);

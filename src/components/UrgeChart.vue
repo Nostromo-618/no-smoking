@@ -202,7 +202,18 @@ import { storageService, type Urge } from '@/services/storageService'
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend)
 
 const theme = useTheme()
-const chartData = ref({ labels: [] as string[], datasets: [] as any[] })
+const chartData = ref({ labels: [] as string[],     datasets: [] as Array<{
+      label: string;
+      borderColor: string;
+      backgroundColor: string;
+      data: number[];
+      fill: boolean;
+      pointBackgroundColor: string[];
+      pointBorderColor: string;
+      pointBorderWidth: number;
+      pointRadius: number;
+      pointHoverRadius: number;
+    }> })
 const urges = ref<Urge[]>([])
 const filteredUrges = ref<Urge[]>([])
 
