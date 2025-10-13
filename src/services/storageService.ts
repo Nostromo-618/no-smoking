@@ -10,6 +10,7 @@ const THEME_STORAGE_KEY = 'themePreference';
 const URGE_TYPE_STORAGE_KEY = 'urgeTypePreference';
 const CALENDAR_INTERVAL_STORAGE_KEY = 'calendarIntervalPreference';
 const CUSTOM_DATE_RANGE_STORAGE_KEY = 'customDateRange';
+const DISCLAIMER_ACCEPTED_KEY = 'disclaimerAccepted';
 const MAX_STORAGE_SIZE = 5 * 1024 * 1024; // 5MB limit
 
 // Sanitize string to prevent XSS
@@ -400,6 +401,26 @@ export const storageService = {
       return true;
     } catch (error) {
       console.error('Error saving custom date range:', error);
+      return false;
+    }
+  },
+  
+  getDisclaimerAccepted(): boolean {
+    try {
+      const accepted = localStorage.getItem(DISCLAIMER_ACCEPTED_KEY);
+      return accepted === 'true';
+    } catch (error) {
+      console.error('Error reading disclaimer acceptance:', error);
+      return false;
+    }
+  },
+
+  saveDisclaimerAccepted(accepted: boolean): boolean {
+    try {
+      localStorage.setItem(DISCLAIMER_ACCEPTED_KEY, accepted.toString());
+      return true;
+    } catch (error) {
+      console.error('Error saving disclaimer acceptance:', error);
       return false;
     }
   },
