@@ -13,7 +13,7 @@ node_modules
 .npm
 
 # Build outputs
-# dist (commented out for gh-pages branch)
+dist
 dist-ssr
 *.local
 
