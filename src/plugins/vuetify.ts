@@ -44,6 +44,46 @@ const vuetify = createVuetify({
       },
     },
   },
+  defaults: {
+    global: {
+      font: {
+        family: 'Ubuntu, sans-serif',
+      },
+    },
+    VBtn: {
+      style: [{ fontFamily: 'Ubuntu, sans-serif' }],
+    },
+    VCard: {
+      style: [{ fontFamily: 'Ubuntu, sans-serif' }],
+    },
+    VTextField: {
+      style: [{ fontFamily: 'Ubuntu, sans-serif' }],
+    },
+    VSelect: {
+      style: [{ fontFamily: 'Ubuntu, sans-serif' }],
+    },
+    VCheckbox: {
+      style: [{ fontFamily: 'Ubuntu, sans-serif' }],
+    },
+    VRadio: {
+      style: [{ fontFamily: 'Ubuntu, sans-serif' }],
+    },
+    VList: {
+      style: [{ fontFamily: 'Ubuntu, sans-serif' }],
+    },
+    VListItem: {
+      style: [{ fontFamily: 'Ubuntu, sans-serif' }],
+    },
+    VDialog: {
+      style: [{ fontFamily: 'Ubuntu, sans-serif' }],
+    },
+    VToolbar: {
+      style: [{ fontFamily: 'Ubuntu, sans-serif' }],
+    },
+    VAppBar: {
+      style: [{ fontFamily: 'Ubuntu, sans-serif' }],
+    },
+  },
 })
 
 export default vuetify
