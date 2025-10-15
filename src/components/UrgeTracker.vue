@@ -36,14 +36,62 @@
 
       <v-alert
         v-if="showSuccessMessage"
-        type="success"
+        :type="getAlertType()"
         variant="tonal"
         class="mb-4"
         closable
         @click:close="showSuccessMessage = false"
       >
-        Urge recorded successfully! Keep going strong! 💪
+        {{ getSuccessMessage() }}
       </v-alert>
+
+      <!-- Urge Type Radio Buttons -->
+      <div class="mb-4">
+        <div class="text-caption text-medium-emphasis mb-3 text-center">Select urge outcome:</div>
+        <v-radio-group
+          v-model="urgeType"
+          inline
+          hide-details
+          class="d-flex justify-space-between"
+        >
+          <v-radio
+            value="resisted"
+            color="success"
+            class="flex-grow-1"
+          >
+            <template v-slot:label>
+              <div class="d-flex align-center">
+                <v-icon color="success" size="small" class="mr-2">mdi-check-circle</v-icon>
+                <span class="text-body-2">Urge Resisted</span>
+              </div>
+            </template>
+          </v-radio>
+          <v-radio
+            value="nicotine"
+            color="error"
+            class="flex-grow-1"
+          >
+            <template v-slot:label>
+              <div class="d-flex align-center">
+                <v-icon color="error" size="small" class="mr-2">mdi-smoking</v-icon>
+                <span class="text-body-2">Nicotine Happened</span>
+              </div>
+            </template>
+          </v-radio>
+          <v-radio
+            value="recorded"
+            color="grey"
+            class="flex-grow-1"
+          >
+            <template v-slot:label>
+              <div class="d-flex align-center">
+                <v-icon color="grey" size="small" class="mr-2">mdi-pencil</v-icon>
+                <span class="text-body-2">Just Record</span>
+              </div>
+            </template>
+          </v-radio>
+        </v-radio-group>
+      </div>
     </v-card-text>
 
     <v-card-actions class="px-6 pb-6">
@@ -63,7 +111,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { storageService, type Urge } from '@/services/storageService'
 
 const emit = defineEmits(['urgeRecorded'])
@@ -71,6 +119,7 @@ const emit = defineEmits(['urgeRecorded'])
 const intensity = ref(5)
 const isRecording = ref(false)
 const showSuccessMessage = ref(false)
+const urgeType = ref<'resisted' | 'nicotine' | 'recorded'>('resisted')
 
 const cardTitle = computed(() => {
   return 'Track a New Urge'
@@ -90,6 +139,30 @@ const getIntensityLabel = (value: number) => {
   return 'Very High'
 }
 
+const getAlertType = () => {
+  switch (urgeType.value) {
+    case 'resisted':
+      return 'success'
+    case 'nicotine':
+      return 'error'
+    case 'recorded':
+    default:
+      return 'info'
+  }
+}
+
+const getSuccessMessage = () => {
+  switch (urgeType.value) {
+    case 'resisted':
+      return 'Urge resisted successfully! Keep going strong! 💪'
+    case 'nicotine':
+      return 'Recorded. Don\'t be too hard on yourself - tomorrow is a new day! 🌟'
+    case 'recorded':
+    default:
+      return 'Urge recorded for tracking purposes 📊'
+  }
+}
+
 const recordUrge = async () => {
   isRecording.value = true
 
@@ -97,6 +170,7 @@ const recordUrge = async () => {
     const urgeData: Urge = {
       intensity: intensity.value,
       timestamp: new Date().toISOString(),
+      type: urgeType.value
     }
 
     storageService.saveUrge(urgeData)
@@ -112,4 +186,17 @@ const recordUrge = async () => {
     isRecording.value = false
   }
 }
+
+// Load and save urge type preference
+onMounted(() => {
+  const savedUrgeType = storageService.getUrgeTypePreference()
+  if (savedUrgeType) {
+    urgeType.value = savedUrgeType as 'resisted' | 'nicotine' | 'recorded'
+  }
+})
+
+// Watch for urge type changes and save preference
+watch(urgeType, (newType) => {
+  storageService.saveUrgeTypePreference(newType)
+})
 </script>
