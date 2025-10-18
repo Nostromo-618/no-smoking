@@ -381,7 +381,6 @@ const applyDateFilter = () => {
         
         // Save custom date range when Apply is clicked (if component is mounted)
         if (isMounted.value && !isInitializing.value) {
-          console.log('Saving custom date range on Apply:', { startDate: startDate.value, endDate: endDate.value })
           storageService.saveCustomDateRange(startDate.value, endDate.value)
         }
       }
@@ -483,9 +482,6 @@ const isInitializing = ref(true)
 watch(
   dateRangeType,
   (newType, oldType) => {
-    console.log('=== WATCHER TRIGGERED ===')
-    console.log('dateRangeType changed from:', oldType, 'to:', newType)
-    console.log('isMounted:', isMounted.value)
 
     if (newType === 'custom' && !startDate.value && !endDate.value) {
       const now = new Date()
@@ -496,14 +492,11 @@ watch(
     // Only save preference after component is mounted (user interaction)
     // Skip saving if oldType is undefined (initial setup) or during initialization
     if (isMounted.value && newType && oldType !== newType) {
-      console.log('Watcher triggered: Saving preference', { newType, isMounted: isMounted.value });
-      const saved = storageService.saveCalendarIntervalPreference(newType);
-      console.log('Save result:', saved);
+      storageService.saveCalendarIntervalPreference(newType);
       
       // If switching away from custom, we don't need to save the dates
       // If switching to custom, dates will be saved when user clicks Apply
     } else {
-      console.log('Watcher skipped: Component not mounted or type unchanged', { isMounted: isMounted.value, oldType, newType, isInitializing: isInitializing.value });
     }
   },
 )
@@ -515,40 +508,30 @@ watch(
     // Only save if component is mounted, dates are set, and this is a user interaction
     if (isMounted.value && !isInitializing.value && dateRangeType.value === 'custom') {
       if (newStart && newEnd && (newStart !== oldStart || newEnd !== oldEnd)) {
-        console.log('Custom dates changed:', { startDate: newStart, endDate: newEnd });
-        const saved = storageService.saveCustomDateRange(newStart, newEnd);
-        console.log('Custom date range save result:', saved);
+        storageService.saveCustomDateRange(newStart, newEnd);
       }
     }
   },
 )
 
 onMounted(() => {
-  console.log('Component mounted')
-  console.log('Current dateRangeType value before loading from storage:', dateRangeType.value)
 
   // Load saved calendar interval preference
   const savedInterval = storageService.getCalendarIntervalPreference()
-  console.log('Storage value from localStorage:', localStorage.getItem('calendarIntervalPreference'))
-  console.log('Saved interval from service:', savedInterval)
 
   // Set the date range type from storage (or use default)
   if (savedInterval && ['all', 'week', 'month', 'custom'].includes(savedInterval)) {
-    console.log('Setting dateRangeType to:', savedInterval)
     dateRangeType.value = savedInterval as 'all' | 'week' | 'month' | 'custom'
     
     // If the saved interval is 'custom', load the saved custom date range
     if (savedInterval === 'custom') {
       const savedDateRange = storageService.getCustomDateRange()
-      console.log('Loading saved custom date range:', savedDateRange)
       
       if (savedDateRange) {
         startDate.value = savedDateRange.startDate
         endDate.value = savedDateRange.endDate
-        console.log('Custom dates loaded:', { startDate: startDate.value, endDate: endDate.value })
       } else {
         // If no saved custom range, initialize with default (last week)
-        console.log('No saved custom range, using default dates')
         const now = new Date()
         const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
         startDate.value = weekAgo.toISOString().split('T')[0]
@@ -556,11 +539,9 @@ onMounted(() => {
       }
     }
   } else {
-    console.log('Using default value: all')
     dateRangeType.value = 'all'
   }
 
-  console.log('Final dateRangeType value:', dateRangeType.value)
 
   // Load the urges data
   urges.value = storageService.getUrges()
@@ -574,7 +555,6 @@ onMounted(() => {
     // Clear the initializing flag after a short delay to ensure all reactivity is complete
     setTimeout(() => {
       isInitializing.value = false
-      console.log('Component fully mounted and ready for user interactions')
     }, 100)
   })
 })

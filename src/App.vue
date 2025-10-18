@@ -91,12 +91,6 @@ onMounted(() => {
   mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
   mediaQuery.addEventListener('change', handleSystemThemeChange)
   
-  // Debug info (can be removed in production)
-  console.log('Theme initialized:', {
-    preference: currentThemePreference.value,
-    systemTheme: getSystemTheme(),
-    appliedTheme: theme.global.name.value
-  })
 })
 
 onUnmounted(() => {
