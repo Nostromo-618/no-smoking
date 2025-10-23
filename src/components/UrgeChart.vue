@@ -456,10 +456,10 @@ const updateChartData = () => {
   }
 }
 
-const loadChartData = (skipFilter = false) => {
-  urges.value = storageService.getUrges()
+const loadChartData = async (skipFilter = false) => {
+  urges.value = await storageService.getUrges()
   // Initialize filtered urges with all urges
-  filteredUrges.value = [...urges.value]
+  filteredUrges.value = [...(urges.value || [])]
   // Apply current filter unless explicitly skipped
   if (!skipFilter) {
     applyDateFilter()
@@ -514,7 +514,7 @@ watch(
   },
 )
 
-onMounted(() => {
+onMounted(async () => {
 
   // Load saved calendar interval preference
   const savedInterval = storageService.getCalendarIntervalPreference()
@@ -544,7 +544,7 @@ onMounted(() => {
 
 
   // Load the urges data
-  urges.value = storageService.getUrges()
+  await loadChartData(true);
 
   // Apply the filter with the dateRangeType that was set from storage
   applyDateFilter()

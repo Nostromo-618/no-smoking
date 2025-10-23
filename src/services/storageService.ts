@@ -1,3 +1,5 @@
+import { encryptionService } from './encryptionService';
+
 // Enhanced secure version of storageService with additional security measures
 export interface Urge {
   intensity: number;
@@ -39,13 +41,14 @@ function checkStorageSize(): boolean {
   return totalSize < MAX_STORAGE_SIZE;
 }
 
-export const storageService = {
-  getUrges(): Urge[] {
+  export const storageService = {
+  async getUrges(): Promise<Urge[]> {
     try {
       const urgesJson = localStorage.getItem(STORAGE_KEY);
       if (!urgesJson) return [];
       
-      const urges = JSON.parse(urgesJson);
+      const decryptedUrges = await encryptionService.decrypt(urgesJson);
+      const urges = JSON.parse(decryptedUrges);
       
       // Validate data structure
       if (!Array.isArray(urges)) {
@@ -67,11 +70,34 @@ export const storageService = {
       }));
     } catch (error) {
       console.error('Error reading from localStorage:', error);
-      return [];
+      // If decryption fails, it might be old unencrypted data.
+      // Try to parse it as-is. If that also fails, return empty.
+      try {
+        const urgesJson = localStorage.getItem(STORAGE_KEY);
+        if (!urgesJson) return [];
+        const urges = JSON.parse(urgesJson);
+        if (!Array.isArray(urges)) return [];
+        // If successful, re-encrypt the data
+        this.saveUrges(urges);
+        return urges;
+      } catch (e) {
+        return [];
+      }
     }
   },
 
-  saveUrge(urge: Urge): boolean {
+  async saveUrges(urges: Urge[]): Promise<boolean> {
+    try {
+      const encryptedUrges = await encryptionService.encrypt(JSON.stringify(urges));
+      localStorage.setItem(STORAGE_KEY, encryptedUrges);
+      return true;
+    } catch (error) {
+      console.error('Error saving urges to localStorage:', error);
+      return false;
+    }
+  },
+
+  async saveUrge(urge: Urge): Promise<boolean> {
     try {
       // Validate input
       if (!urge || 
@@ -87,7 +113,7 @@ export const storageService = {
         throw new Error('Storage quota exceeded');
       }
       
-      const urges = this.getUrges();
+      const urges = await this.getUrges();
       
       // Limit total number of urges to prevent memory issues
       const MAX_URGES = 10000;
@@ -102,17 +128,16 @@ export const storageService = {
         type: urge.type || 'resisted' // Include type with default
       });
       
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(urges));
-      return true;
+      return this.saveUrges(urges);
     } catch (error) {
       console.error('Error saving to localStorage:', error);
       return false;
     }
   },
 
-  downloadUrges(): void {
+  async downloadUrges(): Promise<void> {
     try {
-      const urges = this.getUrges();
+      const urges = await this.getUrges();
       const dataStr = "data:text/json;charset=utf-8," + 
                      encodeURIComponent(JSON.stringify(urges, null, 2));
       
@@ -146,7 +171,7 @@ export const storageService = {
       
       const reader = new FileReader();
       
-      reader.onload = (event) => {
+      reader.onload = async (event) => {
         try {
           const result = event.target?.result;
           if (typeof result !== 'string') {
@@ -192,8 +217,9 @@ export const storageService = {
             throw new Error('No valid urges found in the file');
           }
           
+          let finalUrges: Urge[];
           if (mergeWithExisting) {
-            const existingUrges = this.getUrges();
+            const existingUrges = await this.getUrges();
             const mergedUrges = [...existingUrges, ...validUrges];
             
             // Remove duplicates based on timestamp
@@ -207,12 +233,12 @@ export const storageService = {
             );
             
             // Limit total size
-            const finalUrges = uniqueUrges.slice(-MAX_IMPORT);
+            finalUrges = uniqueUrges.slice(-MAX_IMPORT);
             
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(finalUrges));
           } else {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(validUrges));
+            finalUrges = validUrges;
           }
+          await this.saveUrges(finalUrges);
           
           resolve();
         } catch (error) {

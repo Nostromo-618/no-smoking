@@ -173,7 +173,7 @@ const recordUrge = async () => {
       type: urgeType.value
     }
 
-    storageService.saveUrge(urgeData)
+    await storageService.saveUrge(urgeData)
     emit('urgeRecorded')
 
     showSuccessMessage.value = true

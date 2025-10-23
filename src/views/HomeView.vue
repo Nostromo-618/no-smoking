@@ -274,8 +274,8 @@ const snackbar = ref(false)
 const snackbarMessage = ref('')
 const snackbarColor = ref('success')
 
-const handleUrgeRecorded = () => {
-  urgeChart.value?.loadChartData()
+const handleUrgeRecorded = async () => {
+  await urgeChart.value?.loadChartData()
 }
 
 const downloadData = () => {
