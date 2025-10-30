@@ -163,17 +163,17 @@
             <v-card variant="tonal" color="error">
               <v-card-text class="text-center">
                 <v-icon color="error" size="large">mdi-smoking</v-icon>
-                <div class="text-h5 font-weight-bold mt-2">{{ nicotineCount }}</div>
-                <div class="text-caption">Nicotine Happened</div>
+                <div class="text-h5 font-weight-bold mt-2">{{ smokingCount }}</div>
+                <div class="text-caption">Smoking Happened</div>
               </v-card-text>
             </v-card>
           </v-col>
           <v-col cols="12" sm="4">
-            <v-card variant="tonal" color="grey">
+            <v-card variant="tonal" color="orange">
               <v-card-text class="text-center">
-                <v-icon color="grey" size="large">mdi-pencil</v-icon>
-                <div class="text-h5 font-weight-bold mt-2">{{ recordedCount }}</div>
-                <div class="text-caption">Just Recorded</div>
+                <v-icon color="orange" size="large">mdi-pill</v-icon>
+                <div class="text-h5 font-weight-bold mt-2">{{ gumCount }}</div>
+                <div class="text-caption">Nicotine Gum</div>
               </v-card-text>
             </v-card>
           </v-col>
@@ -331,8 +331,8 @@ const averageIntensity = computed(() => {
   return avg.toFixed(1)
 })
 const resistedCount = computed(() => filteredUrges.value.filter(u => !u.type || u.type === 'resisted').length)
-const nicotineCount = computed(() => filteredUrges.value.filter(u => u.type === 'nicotine').length)
-const recordedCount = computed(() => filteredUrges.value.filter(u => u.type === 'recorded').length)
+const smokingCount = computed(() => filteredUrges.value.filter(u => u.type === 'smoking').length)
+const gumCount = computed(() => filteredUrges.value.filter(u => u.type === 'gum').length)
 const lastUrgeTime = computed(() => {
   // Always use all urges for last urge time, not filtered
   if (urges.value.length === 0) return 'Never'
@@ -421,10 +421,10 @@ const updateChartData = () => {
     switch (urgeType) {
       case 'resisted':
         return isDark ? '#4ade80' : '#22c55e' // Green
-      case 'nicotine':
+      case 'smoking':
         return isDark ? '#f87171' : '#ef4444' // Red
-      case 'recorded':
-        return isDark ? '#9ca3af' : '#6b7280' // Grey
+      case 'gum':
+        return isDark ? '#fb923c' : '#f97316' // Orange
       default:
         return isDark ? '#4ade80' : '#22c55e' // Default to green for backward compatibility
     }

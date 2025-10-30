@@ -147,7 +147,7 @@ function handleDisclaimerDecline() {
     <!-- Main App Content with conditional blur -->
     <div :class="{ 'app-blurred': showDisclaimer }">
       <v-app-bar app elevation="0" color="transparent" absolute>
-        <v-toolbar-title style="color: white">Track your urges and stop smoking</v-toolbar-title>
+        <v-toolbar-title style="color: white">No Smoking!</v-toolbar-title>
         <v-spacer></v-spacer>
         <v-tooltip :text="themeTooltip" location="bottom">
           <template v-slot:activator="{ props }">

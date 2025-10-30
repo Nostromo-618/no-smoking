@@ -3,11 +3,11 @@
   <div class="home-responsive" :class="{ 'dark-mode': isDarkMode }">
     <v-container fluid class="pa-0 pt-16">
       <!-- Header Section -->
-      <v-row class="mb-8 mt-4">
+      <v-row class="mb-8 mt-4 header-row">
         <v-col cols="12" class="text-center">
-          <h1 class="text-h3 font-weight-light mb-2">Track Your Progress</h1>
+          <h3 class="text-h3 font-weight-light mb-2">Track, Limit, and Quit</h3>
           <p class="text-subtitle-1 text-medium-emphasis subtitle">
-            Monitor your smoking urges and celebrate your journey to freedom
+            Monitor your nicotine consumption, better understand your habits and patterns.
           </p>
         </v-col>
       </v-row>
@@ -249,6 +249,11 @@ h1 {
 
   .subtitle {
     font-size: 1rem;
+  }
+
+  /* Add safe padding for header content on small screens */
+  .header-row {
+    padding: 0 16px;
   }
 }
 </style>

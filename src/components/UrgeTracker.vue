@@ -50,14 +50,12 @@
         <div class="text-caption text-medium-emphasis mb-3 text-center">Select urge outcome:</div>
         <v-radio-group
           v-model="urgeType"
-          inline
           hide-details
-          class="d-flex justify-space-between"
         >
           <v-radio
             value="resisted"
             color="success"
-            class="flex-grow-1"
+            class="mb-2"
           >
             <template v-slot:label>
               <div class="d-flex align-center">
@@ -67,26 +65,26 @@
             </template>
           </v-radio>
           <v-radio
-            value="nicotine"
+            value="smoking"
             color="error"
-            class="flex-grow-1"
+            class="mb-2"
           >
             <template v-slot:label>
               <div class="d-flex align-center">
                 <v-icon color="error" size="small" class="mr-2">mdi-smoking</v-icon>
-                <span class="text-body-2">Nicotine Happened</span>
+                <span class="text-body-2">Smoking Happened</span>
               </div>
             </template>
           </v-radio>
           <v-radio
-            value="recorded"
-            color="grey"
-            class="flex-grow-1"
+            value="gum"
+            color="orange"
+            class="mb-2"
           >
             <template v-slot:label>
               <div class="d-flex align-center">
-                <v-icon color="grey" size="small" class="mr-2">mdi-pencil</v-icon>
-                <span class="text-body-2">Just Record</span>
+                <v-icon color="orange" size="small" class="mr-2">mdi-pill</v-icon>
+                <span class="text-body-2">Nicotine Gum Happened</span>
               </div>
             </template>
           </v-radio>
@@ -119,7 +117,7 @@ const emit = defineEmits(['urgeRecorded'])
 const intensity = ref(5)
 const isRecording = ref(false)
 const showSuccessMessage = ref(false)
-const urgeType = ref<'resisted' | 'nicotine' | 'recorded'>('resisted')
+const urgeType = ref<'resisted' | 'smoking' | 'gum'>('resisted')
 
 const cardTitle = computed(() => {
   return 'Track a New Urge'
@@ -143,9 +141,10 @@ const getAlertType = () => {
   switch (urgeType.value) {
     case 'resisted':
       return 'success'
-    case 'nicotine':
+    case 'smoking':
       return 'error'
-    case 'recorded':
+    case 'gum':
+      return 'warning'
     default:
       return 'info'
   }
@@ -155,11 +154,12 @@ const getSuccessMessage = () => {
   switch (urgeType.value) {
     case 'resisted':
       return 'Urge resisted successfully! Keep going strong! 💪'
-    case 'nicotine':
+    case 'smoking':
       return 'Recorded. Don\'t be too hard on yourself - tomorrow is a new day! 🌟'
-    case 'recorded':
+    case 'gum':
+      return 'Nicotine gum recorded.🌱 Better than smoking!'
     default:
-      return 'Urge recorded for tracking purposes 📊'
+      return 'Urge recorded successfully 📊'
   }
 }
 
@@ -190,8 +190,8 @@ const recordUrge = async () => {
 // Load and save urge type preference
 onMounted(() => {
   const savedUrgeType = storageService.getUrgeTypePreference()
-  if (savedUrgeType) {
-    urgeType.value = savedUrgeType as 'resisted' | 'nicotine' | 'recorded'
+  if (savedUrgeType && (savedUrgeType === 'resisted' || savedUrgeType === 'smoking' || savedUrgeType === 'gum')) {
+    urgeType.value = savedUrgeType as 'resisted' | 'smoking' | 'gum'
   }
 })
 

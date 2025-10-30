@@ -4,7 +4,7 @@ import { encryptionService } from './encryptionService';
 export interface Urge {
   intensity: number;
   timestamp: string;
-  type?: 'resisted' | 'nicotine' | 'recorded'; // New field for urge type
+  type?: 'resisted' | 'smoking' | 'gum'; // Field for urge type: resisted, smoking, or nicotine gum
 }
 
 const STORAGE_KEY = 'smokingUrges';
@@ -56,7 +56,7 @@ function checkStorageSize(): boolean {
         return [];
       }
       
-      // Filter out invalid entries and add default type for backward compatibility
+      // Filter out invalid entries
       return urges.filter(urge => 
         urge &&
         typeof urge.intensity === 'number' &&
@@ -66,7 +66,7 @@ function checkStorageSize(): boolean {
         isValidTimestamp(urge.timestamp)
       ).map(urge => ({
         ...urge,
-        type: urge.type || 'resisted' // Default to 'resisted' for backward compatibility
+        type: urge.type || 'resisted' // Default to 'resisted' if no type
       }));
     } catch (error) {
       console.error('Error reading from localStorage:', error);
@@ -208,7 +208,7 @@ function checkStorageSize(): boolean {
               validUrges.push({
                 intensity: Math.floor(urge.intensity),
                 timestamp: sanitizeString(urge.timestamp),
-                type: urge.type || 'resisted' // Include type with default
+                type: urge.type || 'resisted' // Default to 'resisted' if no type
               });
             }
           }
@@ -287,7 +287,7 @@ function checkStorageSize(): boolean {
     try {
       const urgeType = localStorage.getItem(URGE_TYPE_STORAGE_KEY);
       // Validate urge type value
-      if (urgeType && ['resisted', 'nicotine', 'recorded'].includes(urgeType)) {
+      if (urgeType && ['resisted', 'smoking', 'gum'].includes(urgeType)) {
         return urgeType;
       }
       return 'resisted'; // Default value
@@ -300,7 +300,7 @@ function checkStorageSize(): boolean {
   saveUrgeTypePreference(urgeType: string): boolean {
     try {
       // Validate urge type value
-      if (!['resisted', 'nicotine', 'recorded'].includes(urgeType)) {
+      if (!['resisted', 'smoking', 'gum'].includes(urgeType)) {
         throw new Error('Invalid urge type value');
       }
       localStorage.setItem(URGE_TYPE_STORAGE_KEY, urgeType);
