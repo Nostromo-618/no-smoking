@@ -91,13 +91,25 @@ async function deployToGitHubPages() {
     // Copy dist contents to root
     console.log('📂 Copying build files to gh-pages...');
     for (const file of distFiles) {
+      // Skip system files like .DS_Store, Thumbs.db, etc.
+      if (file.startsWith('.DS_Store') || file.startsWith('Thumbs.db') || file.startsWith('desktop.ini')) {
+        console.log(`⏭️  Skipping system file: ${file}`);
+        continue;
+      }
+      
       const srcPath = path.join(__dirname, 'dist', file);
       const destPath = path.join('./', file);
       
-      if (fs.statSync(srcPath).isDirectory()) {
-        fs.cpSync(srcPath, destPath, { recursive: true });
-      } else {
-        fs.copyFileSync(srcPath, destPath);
+      try {
+        if (fs.statSync(srcPath).isDirectory()) {
+          fs.cpSync(srcPath, destPath, { recursive: true });
+          console.log(`📁 Copied directory: ${file}`);
+        } else {
+          fs.copyFileSync(srcPath, destPath);
+          console.log(`📄 Copied file: ${file}`);
+        }
+      } catch (error) {
+        console.log(`⚠️  Skipped ${file}: ${error.message}`);
       }
     }
     
