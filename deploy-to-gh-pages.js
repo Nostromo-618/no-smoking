@@ -102,7 +102,11 @@ async function deployToGitHubPages() {
     }
     
     // Add .nojekyll file to prevent Jekyll processing
-    fs.writeFileSync('./.nojekyll', '');
+    const nojekyllPath = './.nojekyll';
+    if (!fs.existsSync(nojekyllPath)) {
+      fs.writeFileSync(nojekyllPath, '');
+      console.log('📄 Created .nojekyll file');
+    }
     
     // Commit and push
     console.log('📤 Committing and pushing to GitHub...');
