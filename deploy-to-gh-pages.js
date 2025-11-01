@@ -61,25 +61,21 @@ async function deployToGitHubPages() {
       console.log('No changes to commit, continuing with deployment...');
     }
     
-    // Step 1: Build the project
-    console.log('📦 Building project...');
-    runCommand('npm run build-only');
-    
-    // Step 2: Check if dist folder exists
+    // Check if dist folder exists (user should run npm run build first)
     if (!fs.existsSync('./dist')) {
-      throw new Error('Dist folder not found after build!');
+      throw new Error('❌ Dist folder not found! Please run "npm run build" first, then try again.');
     }
     
-    // Step 2.5: Store dist files info before switching branches
+    // Store dist files info before switching branches
     console.log('📁 Storing dist files info...');
     const distPath = path.join(__dirname, 'dist');
     const distFiles = fs.readdirSync(distPath);
     
-    // Step 3: Get current branch and switch to gh-pages
+    // Switch to gh-pages branch
     console.log('📄 Switching to gh-pages branch...');
     runCommand('git checkout gh-pages');
     
-    // Step 4: Clean gh-pages branch (remove all files except .git)
+    // Clean gh-pages branch (remove all files except .git)
     console.log('🧹 Cleaning gh-pages branch...');
     for (const file of fs.readdirSync('.')) {
       if (file !== '.git' && file !== 'node_modules' && !fs.statSync(file).isDirectory() || (fs.statSync(file).isDirectory() && file !== '.git')) {
@@ -92,7 +88,7 @@ async function deployToGitHubPages() {
       }
     }
     
-    // Step 5: Copy dist contents to root
+    // Copy dist contents to root
     console.log('📂 Copying build files to gh-pages...');
     for (const file of distFiles) {
       const srcPath = path.join(__dirname, 'dist', file);
@@ -105,16 +101,16 @@ async function deployToGitHubPages() {
       }
     }
     
-    // Step 6: Add .nojekyll file to prevent Jekyll processing
+    // Add .nojekyll file to prevent Jekyll processing
     fs.writeFileSync('./.nojekyll', '');
     
-    // Step 7: Commit and push
+    // Commit and push
     console.log('📤 Committing and pushing to GitHub...');
     runCommand('git add .');
     runCommand('git commit -m "🚀 Auto-deploy: Update gh-pages with latest build"');
     runCommand('git push origin gh-pages');
     
-    // Step 8: Switch back to main
+    // Switch back to main
     console.log('🔄 Switching back to main branch...');
     runCommand('git checkout main');
     

@@ -2,29 +2,31 @@
 
 This project includes an automated deployment system that builds your Vue.js app and deploys it to the `gh-pages` branch for GitHub Pages hosting.
 
-## 🚀 Quick Deploy
+## 🚀 Automated Deploy
 
-Run the automated deployment script:
+**Step 1:** Build the project
+```bash
+npm run build
+```
 
+**Step 2:** Deploy to GitHub Pages
 ```bash
 npm run deploy:pages
 ```
 
-This script will:
-1. **Build** the project (`npm run build`)
-2. **Switch** to gh-pages branch
-3. **Clean** the gh-pages branch (keeping only built files)
-4. **Deploy** the dist folder contents to gh-pages root
+The deployment script will:
+1. **Switch** to gh-pages branch
+2. **Clean** the gh-pages branch (keeping only built files)
+3. **Deploy** the dist folder contents to gh-pages root
+4. **Add** `.nojekyll` file to prevent Jekyll processing
 5. **Commit & Push** to GitHub
 6. **Switch back** to main branch
 
-## 🎯 Manual Deploy (Alternative)
+## 🎯 All-in-One (Alternative)
 
-If you prefer the traditional approach:
-
+If you prefer a single command:
 ```bash
-npm run build
-npm run deploy
+npm run build && npm run deploy:pages
 ```
 
 ## 📁 Project Structure
