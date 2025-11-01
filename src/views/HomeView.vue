@@ -5,10 +5,20 @@
       <!-- Header Section -->
       <v-row class="mb-8 mt-4 header-row">
         <v-col cols="12" class="text-center">
-          <h3 class="text-h3 font-weight-light mb-2">Track, Limit, and Quit</h3>
-          <p class="text-subtitle-1 text-medium-emphasis subtitle">
+          <h3 
+            class="font-weight-light mb-2"
+            :class="hasUrges ? 'text-h5' : 'text-h3'"
+          >
+            Track, Limit, and Quit
+          </h3>
+          
+          <!-- Show subtitle text when no urges, show timers when urges exist -->
+          <p v-if="!hasUrges" class="text-subtitle-1 text-medium-emphasis subtitle">
             Monitor your nicotine consumption, better understand your habits and patterns.
           </p>
+          
+          <!-- Live timers showing time since each type of urge -->
+          <UrgeTimers v-else ref="urgeTimers" />
         </v-col>
       </v-row>
 
@@ -25,6 +35,15 @@
         <v-col cols="12" md="6" lg="7" class="pa-4">
           <div class="content-wrapper h-100">
             <UrgeChart ref="urgeChart" />
+          </div>
+        </v-col>
+      </v-row>
+
+      <!-- Interval Progress Chart Section -->
+      <v-row v-if="hasUrges" class="main-content" justify="center" no-gutters>
+        <v-col cols="12" class="pa-4">
+          <div class="content-wrapper">
+            <IntervalChart ref="intervalChart" />
           </div>
         </v-col>
       </v-row>
@@ -194,6 +213,12 @@ h1 {
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+h3 {
+  color: white !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: font-size 0.3s ease;
+}
+
 .action-button {
   background: rgba(255, 255, 255, 0.95) !important;
   color: #764ba2 !important;
@@ -251,6 +276,11 @@ h1 {
     font-size: 1rem;
   }
 
+  /* Make heading even smaller on mobile when timers are shown */
+  h3.text-h5 {
+    font-size: 1.25rem !important;
+  }
+
   /* Add safe padding for header content on small screens */
   .header-row {
     padding: 0 16px;
@@ -259,16 +289,21 @@ h1 {
 </style>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useTheme } from 'vuetify'
 import UrgeTracker from '@/components/UrgeTracker.vue'
 import UrgeChart from '@/components/UrgeChart.vue'
+import UrgeTimers from '@/components/UrgeTimers.vue'
+import IntervalChart from '@/components/IntervalChart.vue'
 import { storageService } from '@/services/storageService'
 
 const theme = useTheme()
 const isDarkMode = computed(() => theme.global.current.value.dark)
 
 const urgeChart = ref<InstanceType<typeof UrgeChart> | null>(null)
+const urgeTimers = ref<InstanceType<typeof UrgeTimers> | null>(null)
+const intervalChart = ref<InstanceType<typeof IntervalChart> | null>(null)
+const hasUrges = ref(false)
 const fileInput = ref<HTMLInputElement | null>(null)
 const importDialog = ref(false)
 const importOption = ref<'replace' | 'merge'>('merge')
@@ -281,7 +316,19 @@ const snackbarColor = ref('success')
 
 const handleUrgeRecorded = async () => {
   await urgeChart.value?.loadChartData()
+  await urgeTimers.value?.refresh()
+  await intervalChart.value?.loadChartData()
+  await checkHasUrges()
 }
+
+const checkHasUrges = async () => {
+  const urges = await storageService.getUrges()
+  hasUrges.value = urges.length > 0
+}
+
+onMounted(async () => {
+  await checkHasUrges()
+})
 
 const downloadData = () => {
   storageService.downloadUrges()
@@ -319,8 +366,11 @@ const performImport = async () => {
     const mergeWithExisting = importOption.value === 'merge'
     await storageService.importUrges(selectedFile.value, mergeWithExisting)
     
-    // Refresh the chart with new data
+    // Refresh the chart, timers, and interval chart with new data
     urgeChart.value?.loadChartData()
+    await urgeTimers.value?.refresh()
+    await intervalChart.value?.loadChartData()
+    await checkHasUrges()
     
     importDialog.value = false
     showSnackbar(
