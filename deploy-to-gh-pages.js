@@ -70,6 +70,11 @@ async function deployToGitHubPages() {
       throw new Error('Dist folder not found after build!');
     }
     
+    // Step 2.5: Store dist files info before switching branches
+    console.log('📁 Storing dist files info...');
+    const distPath = path.join(__dirname, 'dist');
+    const distFiles = fs.readdirSync(distPath);
+    
     // Step 3: Get current branch and switch to gh-pages
     console.log('📄 Switching to gh-pages branch...');
     runCommand('git checkout gh-pages');
@@ -89,9 +94,8 @@ async function deployToGitHubPages() {
     
     // Step 5: Copy dist contents to root
     console.log('📂 Copying build files to gh-pages...');
-    const distFiles = fs.readdirSync('./dist');
     for (const file of distFiles) {
-      const srcPath = path.join('./dist', file);
+      const srcPath = path.join(__dirname, 'dist', file);
       const destPath = path.join('./', file);
       
       if (fs.statSync(srcPath).isDirectory()) {
