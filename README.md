@@ -1,3 +1,44 @@
+# Auto GitHub Pages Deployment
+
+This project includes an automated deployment system that builds your Vue.js app and deploys it to the `gh-pages` branch for GitHub Pages hosting.
+
+## 🚀 Quick Deploy
+
+Run the automated deployment script:
+
+```bash
+npm run deploy:pages
+```
+
+This script will:
+1. **Build** the project (`npm run build`)
+2. **Switch** to gh-pages branch
+3. **Clean** the gh-pages branch (keeping only built files)
+4. **Deploy** the dist folder contents to gh-pages root
+5. **Commit & Push** to GitHub
+6. **Switch back** to main branch
+
+## 🎯 Manual Deploy (Alternative)
+
+If you prefer the traditional approach:
+
+```bash
+npm run build
+npm run deploy
+```
+
+## 📁 Project Structure
+
+- **main branch**: Source code (Vue.js + TypeScript + Vite)
+- **gh-pages branch**: Built files only (HTML, CSS, JS, assets)
+- **dist folder**: Temporary build output
+
+## 🌐 Live Site
+
+Your site is available at: https://nostromo-618.github.io/no-smoking/
+
+---
+
 # No Smoking - Urge Tracking App
 
 A Vue.js application to help people track their smoking urges and monitor their progress toward quitting smoking. This app provides a simple, privacy-focused way to log urge intensity, outcomes, and visualize progress over time.
