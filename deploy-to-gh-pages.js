@@ -63,10 +63,7 @@ async function deployToGitHubPages() {
     
     // Step 1: Build the project
     console.log('📦 Building project...');
-    console.log('Running: vue-tsc --build');
-    runCommand('npx vue-tsc --build');
-    console.log('Running: vite build');
-    runCommand('npx vite build');
+    runCommand('npm run build-only');
     
     // Step 2: Check if dist folder exists
     if (!fs.existsSync('./dist')) {
