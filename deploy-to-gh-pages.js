@@ -66,10 +66,40 @@ async function deployToGitHubPages() {
       throw new Error('❌ Dist folder not found! Please run "npm run build" first, then try again.');
     }
     
-    // Store dist files info before switching branches
-    console.log('📁 Storing dist files info...');
+    // Store dist files before switching branches
+    console.log('📁 Storing dist files before switching branches...');
     const distPath = path.join(__dirname, 'dist');
+    if (!fs.existsSync(distPath)) {
+      throw new Error('❌ Dist folder not found! Please run "npm run build" first.');
+    }
+    
+    // Create temporary deployment folder
+    const tempDeployPath = path.join(__dirname, '.temp-deploy');
+    if (fs.existsSync(tempDeployPath)) {
+      fs.rmSync(tempDeployPath, { recursive: true, force: true });
+    }
+    fs.mkdirSync(tempDeployPath, { recursive: true });
+    
+    // Copy dist files to temporary location
     const distFiles = fs.readdirSync(distPath);
+    for (const file of distFiles) {
+      // Skip system files like .DS_Store, Thumbs.db, etc.
+      if (file.startsWith('.DS_Store') || file.startsWith('Thumbs.db') || file.startsWith('desktop.ini')) {
+        console.log(`⏭️  Skipping system file: ${file}`);
+        continue;
+      }
+      
+      const srcPath = path.join(distPath, file);
+      const destPath = path.join(tempDeployPath, file);
+      
+      if (fs.statSync(srcPath).isDirectory()) {
+        fs.cpSync(srcPath, destPath, { recursive: true });
+        console.log(`📁 Stored directory: ${file}`);
+      } else {
+        fs.copyFileSync(srcPath, destPath);
+        console.log(`📄 Stored file: ${file}`);
+      }
+    }
     
     // Switch to gh-pages branch
     console.log('📄 Switching to gh-pages branch...');
@@ -88,30 +118,23 @@ async function deployToGitHubPages() {
       }
     }
     
-    // Copy dist contents to root
-    console.log('📂 Copying build files to gh-pages...');
-    for (const file of distFiles) {
-      // Skip system files like .DS_Store, Thumbs.db, etc.
-      if (file.startsWith('.DS_Store') || file.startsWith('Thumbs.db') || file.startsWith('desktop.ini')) {
-        console.log(`⏭️  Skipping system file: ${file}`);
-        continue;
-      }
-      
-      const srcPath = path.join(__dirname, 'dist', file);
+    // Copy files from temporary location to gh-pages root
+    console.log('📂 Moving deployment files to gh-pages...');
+    for (const file of fs.readdirSync(tempDeployPath)) {
+      const srcPath = path.join(tempDeployPath, file);
       const destPath = path.join('./', file);
       
-      try {
-        if (fs.statSync(srcPath).isDirectory()) {
-          fs.cpSync(srcPath, destPath, { recursive: true });
-          console.log(`📁 Copied directory: ${file}`);
-        } else {
-          fs.copyFileSync(srcPath, destPath);
-          console.log(`📄 Copied file: ${file}`);
-        }
-      } catch (error) {
-        console.log(`⚠️  Skipped ${file}: ${error.message}`);
+      if (fs.statSync(srcPath).isDirectory()) {
+        fs.cpSync(srcPath, destPath, { recursive: true });
+        console.log(`📁 Moved directory: ${file}`);
+      } else {
+        fs.copyFileSync(srcPath, destPath);
+        console.log(`📄 Moved file: ${file}`);
       }
     }
+    
+    // Clean up temporary folder
+    fs.rmSync(tempDeployPath, { recursive: true, force: true });
     
     // Add .nojekyll file to prevent Jekyll processing
     const nojekyllPath = './.nojekyll';
